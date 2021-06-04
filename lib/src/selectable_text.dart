@@ -530,9 +530,6 @@ class _SelectableTextState extends State<SelectableText>
 
   bool _showSelectionHandles = false;
 
-  late _SelectableTextSelectionGestureDetectorBuilder
-      _selectionGestureDetectorBuilder;
-
   // API for TextSelectionGestureDetectorBuilderDelegate.
   @override
   late bool forcePressEnabled;
@@ -548,8 +545,6 @@ class _SelectableTextState extends State<SelectableText>
   @override
   void initState() {
     super.initState();
-    _selectionGestureDetectorBuilder =
-        _SelectableTextSelectionGestureDetectorBuilder(state: this);
     _controller = _TextSpanEditingController(
         textSpan: widget.textSpan ?? TextSpan(text: widget.data));
     _controller.addListener(_onControllerChanged);
@@ -592,13 +587,6 @@ class _SelectableTextState extends State<SelectableText>
 
   void _handleSelectionChanged(
       TextSelection selection, SelectionChangedCause? cause) {
-    final bool willShowSelectionHandles = _shouldShowSelectionHandles(cause);
-    if (willShowSelectionHandles != _showSelectionHandles) {
-      setState(() {
-        _showSelectionHandles = willShowSelectionHandles;
-      });
-    }
-
     if (widget.onSelectionChanged != null) {
       widget.onSelectionChanged!(selection, cause);
     }
@@ -623,23 +611,6 @@ class _SelectableTextState extends State<SelectableText>
     if (_controller.selection.isCollapsed) {
       _editableText!.toggleToolbar();
     }
-  }
-
-  bool _shouldShowSelectionHandles(SelectionChangedCause? cause) {
-    // When the text field is activated by something that doesn't trigger the
-    // selection overlay, we shouldn't show the handles either.
-    if (!_selectionGestureDetectorBuilder.shouldShowSelectionToolbar)
-      return false;
-
-    if (_controller.selection.isCollapsed) return false;
-
-    if (cause == SelectionChangedCause.keyboard) return false;
-
-    if (cause == SelectionChangedCause.longPress) return true;
-
-    if (_controller.text.isNotEmpty) return true;
-
-    return false;
   }
 
   @override
@@ -784,10 +755,7 @@ class _SelectableTextState extends State<SelectableText>
       onLongPress: () {
         _effectiveFocusNode.requestFocus();
       },
-      child: _selectionGestureDetectorBuilder.buildGestureDetector(
-        behavior: HitTestBehavior.translucent,
-        child: child,
-      ),
+      child: child
     );
   }
 }
